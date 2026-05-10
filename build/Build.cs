@@ -19,13 +19,10 @@ class Build : TampBuild
 
     [Solution] readonly Solution Solution = null!;
     [GitRepository] readonly GitRepository Git = null!;
-
-    // Tamp.Core 1.0.0's [Secret] resolver isn't wired up yet (TAM-78).
-    // Read NUGET_API_KEY directly until 1.0.1 lands.
-    static readonly Secret? NuGetApiKey =
-        Environment.GetEnvironmentVariable("NUGET_API_KEY") is { Length: > 0 } v
-            ? new Secret("NuGet API key", v)
-            : null;
+    // Bound by SecretBinder from NUGET_API_KEY env var (TAM-78,
+    // Tamp.Core 1.0.1). CI masking via TampBuild.RegisterSecretForCiMasking.
+    [Secret("NuGet API key", EnvironmentVariable = "NUGET_API_KEY")]
+    readonly Secret NuGetApiKey = null!;
 
     AbsolutePath Artifacts => RootDirectory / "artifacts";
 
@@ -96,7 +93,7 @@ class Build : TampBuild
             .Select(p => DotNet.NuGetPush(s => s
                 .SetPackagePath(p)
                 .SetSource("https://api.nuget.org/v3/index.json")
-                .SetApiKey(NuGetApiKey!)
+                .SetApiKey(NuGetApiKey)
                 .SetSkipDuplicate(true))));
 
     Target Ci => _ => _
@@ -113,10 +110,11 @@ class Build : TampBuild
     [NuGetPackage("dotnet-sonarscanner", Version = "10.4.1")]
     readonly Tool SonarTool = null!;
 
-    static readonly Secret? SonarToken =
-        Environment.GetEnvironmentVariable("SONAR_TOKEN") is { Length: > 0 } v
-            ? new Secret("SonarQube token", v)
-            : null;
+
+    [Secret("SonarQube token", EnvironmentVariable = "SONAR_TOKEN")]
+
+
+    readonly Secret SonarToken = null!;
 
     [Parameter("Sonar host URL", EnvironmentVariable = "SONAR_HOST_URL")]
     readonly string SonarHostUrl = "https://sonar.brewingcoder.com";
@@ -132,7 +130,7 @@ class Build : TampBuild
         {
             s.SetProjectKey(SonarProjectKey);
             s.SetHostUrl(SonarHostUrl);
-            s.SetToken(SonarToken!);
+            s.SetToken(SonarToken);
             s.SetProperty("sonar.cs.vstest.reportsPaths", $"{(Artifacts / "test-results").Value}/**/*.trx");
             s.SetProperty("sonar.cs.opencover.reportsPaths", $"{(Artifacts / "test-results").Value}/**/coverage.opencover.xml");
 
@@ -145,7 +143,7 @@ class Build : TampBuild
         .Description("Finalize SonarScanner and submit results to the server.")
         .DependsOn(nameof(Test))
         .Requires(() => SonarToken != null)
-        .Executes(() => Tamp.SonarScanner.V10.SonarScanner.End(SonarTool, s => s.SetToken(SonarToken!)));
+        .Executes(() => Tamp.SonarScanner.V10.SonarScanner.End(SonarTool, s => s.SetToken(SonarToken)));
 
     Target Sonar => _ => _
         .TopLevel()
