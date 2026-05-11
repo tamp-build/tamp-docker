@@ -259,7 +259,7 @@ public sealed class DockerBuildxTests
     [Fact]
     public void Build_Rejects_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Build(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.Build((Action<DockerBuildxBuildSettings>)null!));
     }
 
     [Fact]

@@ -238,30 +238,30 @@ public sealed class DockerTests
     [Fact]
     public void Login_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Login(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.Login((Action<DockerLoginSettings>)null!));
     }
 
     [Fact]
     public void Build_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.LegacyBuild(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.LegacyBuild((Action<DockerLegacyBuildSettings>)null!));
     }
 
     [Fact]
     public void Tag_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Tag(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.Tag((Action<DockerTagSettings>)null!));
     }
 
     [Fact]
     public void Push_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Push(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.Push((Action<DockerPushSettings>)null!));
     }
 
     [Fact]
     public void Pull_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Pull(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.Pull((Action<DockerPullSettings>)null!));
     }
 }

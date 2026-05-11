@@ -73,6 +73,24 @@ public static class Docker
         return s.ToCommandPlan();
     }
 
+    // ---- Object-init overloads (TAM-161) ----
+    // Parallel surface to the fluent verbs above. Both styles produce identical
+    // CommandPlans; fluent remains canonical in docs and `tamp init` templates.
+    //
+    //     Docker.Login(new() { Server = "ghcr.io", Username = "ci", Password = pwd });
+    //
+    // is equivalent to:
+    //
+    //     Docker.Login(s => s.SetServer("ghcr.io").SetUsername("ci").SetPassword(pwd));
+
+    public static CommandPlan Login(DockerLoginSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan Logout(DockerLogoutSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan Build(DockerBuildxBuildSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan LegacyBuild(DockerLegacyBuildSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan Tag(DockerTagSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan Push(DockerPushSettings settings) => settings.ToCommandPlan();
+    public static CommandPlan Pull(DockerPullSettings settings) => settings.ToCommandPlan();
+
     /// <summary>
     /// Sub-facade for <c>docker compose &lt;verb&gt;</c>. Sits under the
     /// same Docker namespace so callers see <c>Docker.Compose.Up(...)</c>
@@ -128,6 +146,30 @@ public static class Docker
             configure?.Invoke(s);
             return s.ToCommandPlan();
         }
+
+        // ---- Object-init overloads (TAM-161) ----
+        // Parallel surface to the fluent verbs above. Both styles produce identical
+        // CommandPlans; fluent remains canonical in docs and `tamp init` templates.
+        // Lifecycle verbs (Start/Stop/Restart/Kill/Pause/Unpause) are intentionally
+        // omitted — they share DockerComposeLifecycleSettings and need an internal
+        // subverb token set by the fluent helper, which an object-init can't supply.
+        //
+        //     Docker.Compose.Up(new() { Detach = true, Services = { "web" } });
+        //
+        // is equivalent to:
+        //
+        //     Docker.Compose.Up(u => u.SetDetach().AddService("web"));
+
+        public static CommandPlan Up(DockerComposeUpSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Down(DockerComposeDownSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan BuildImages(DockerComposeBuildSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Logs(DockerComposeLogsSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Ps(DockerComposePsSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Pull(DockerComposePullSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Push(DockerComposePushSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Exec(DockerComposeExecSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Run(DockerComposeRunSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Config(DockerComposeConfigSettings settings) => settings.ToCommandPlan();
     }
 
     /// <summary>
@@ -171,5 +213,26 @@ public static class Docker
             configure?.Invoke(s);
             return s.ToCommandPlan();
         }
+
+        // ---- Object-init overloads (TAM-161) ----
+        // Parallel surface to the fluent verbs above. Both styles produce identical
+        // CommandPlans; fluent remains canonical in docs and `tamp init` templates.
+        //
+        //     Docker.Buildx.Build(new() { Context = ".", Tags = { "img:tag" } });
+        //
+        // is equivalent to:
+        //
+        //     Docker.Buildx.Build(b => b.SetContext(".").AddTag("img:tag"));
+
+        public static CommandPlan Build(DockerBuildxBuildSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Bake(DockerBuildxBakeSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Create(DockerBuildxCreateSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Ls(DockerBuildxLsSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Use(DockerBuildxUseSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Inspect(DockerBuildxInspectSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Prune(DockerBuildxPruneSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Rm(DockerBuildxRmSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Stop(DockerBuildxStopSettings settings) => settings.ToCommandPlan();
+        public static CommandPlan Version(DockerBuildxVersionSettings settings) => settings.ToCommandPlan();
     }
 }

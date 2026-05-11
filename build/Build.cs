@@ -38,7 +38,6 @@ class Build : TampBuild
         });
 
     Target Clean => _ => _
-        .TopLevel()
         .Description("Delete bin/obj and the artifacts directory.")
         .Executes(() =>
         {
@@ -58,7 +57,6 @@ class Build : TampBuild
         .Executes(() => DotNet.Restore(s => s.SetProject(Solution.Path)));
 
     Target Compile => _ => _
-        .TopLevel()
         .DependsOn(nameof(Restore))
         .Executes(() => DotNet.Build(s => s
             .SetProject(Solution.Path)
@@ -66,7 +64,6 @@ class Build : TampBuild
             .SetNoRestore(true)));
 
     Target Test => _ => _
-        .TopLevel()
         .DependsOn(nameof(Compile))
         .Description("Run the unit test suite.")
         .Executes(() => DotNet.Test(s => s
@@ -79,7 +76,6 @@ class Build : TampBuild
             .SetResultsDirectory(Artifacts / "test-results")));
 
     Target Pack => _ => _
-        .TopLevel()
         .DependsOn(nameof(Test))
         .Description("Pack Tamp.Docker.V27 into ./artifacts.")
         .Executes(() => DotNet.Pack(s =>
@@ -92,7 +88,6 @@ class Build : TampBuild
         }));
 
     Target Push => _ => _
-        .TopLevel()
         .DependsOn(nameof(Pack))
         .Description("Push every nupkg to nuget.org. Tag-driven CI.")
         .Requires(() => NuGetApiKey != null)
@@ -104,7 +99,6 @@ class Build : TampBuild
                 .SetSkipDuplicate(true))));
 
     Target Ci => _ => _
-        .TopLevel()
         .DependsOn(nameof(Info), nameof(Clean), nameof(Pack))
         .Description("Full CI pipeline: print info, clean, restore, build, test, pack.");
 
@@ -153,7 +147,6 @@ class Build : TampBuild
         .Executes(() => Tamp.SonarScanner.V10.SonarScanner.End(SonarTool, s => s.SetToken(SonarToken)));
 
     Target Sonar => _ => _
-        .TopLevel()
         .DependsOn(nameof(SonarBegin), nameof(SonarEnd))
         .Description("End-to-end Sonar scan: Begin (before Compile) → Compile → Test → End. Requires SONAR_TOKEN.");
 
