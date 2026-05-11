@@ -227,4 +227,58 @@ public sealed class DockerBuildxTests
         var plan = Docker.Buildx.Version();
         Assert.Equal(["buildx", "version"], plan.Arguments);
     }
+
+    // ---- Docker.Build now routes to BuildKit (TAM-117, 0.3.0 breaking change) ----
+
+    [Fact]
+    public void Build_Routes_To_Buildx_Build()
+    {
+        var plan = Docker.Build(s => s.SetContext("."));
+        Assert.Equal("buildx", plan.Arguments[0]);
+        Assert.Equal("build", plan.Arguments[1]);
+    }
+
+    [Fact]
+    public void Build_Accepts_DockerBuildxBuildSettings_Surface()
+    {
+        // Compile-time check: the configurer takes DockerBuildxBuildSettings, not the legacy class.
+        // We exercise buildx-only flags (AddPlatform, SetPush, AddCacheFrom) to prove the binding.
+        var plan = Docker.Build(s => s
+            .SetContext(".")
+            .SetDockerfile("./Dockerfile")
+            .AddPlatform("linux/amd64")
+            .AddPlatform("linux/arm64")
+            .SetPush(true)
+            .AddCacheFrom("type=registry,ref=acme/cache"));
+
+        Assert.Contains("--platform", plan.Arguments);
+        Assert.Contains("--push", plan.Arguments);
+        Assert.Contains("--cache-from", plan.Arguments);
+    }
+
+    [Fact]
+    public void Build_Rejects_Null_Configurer()
+    {
+        Assert.Throws<ArgumentNullException>(() => Docker.Build(null!));
+    }
+
+    [Fact]
+    public void Build_Is_Reference_Equivalent_To_Buildx_Build()
+    {
+        // The new Docker.Build is a thin forwarder; calling either should emit the same plan
+        // for the same settings.
+        var direct = Docker.Buildx.Build(s => s.SetContext(".").AddTag("foo:1"));
+        var routed = Docker.Build(s => s.SetContext(".").AddTag("foo:1"));
+        Assert.Equal(direct.Arguments, routed.Arguments);
+        Assert.Equal(direct.Executable, routed.Executable);
+    }
+
+    [Fact]
+    public void LegacyBuild_Still_Emits_Pre_BuildKit_Build()
+    {
+        // Sanity: the legacy entry point still produces a plain `docker build` (no `buildx`).
+        var plan = Docker.LegacyBuild(s => s.SetContext("."));
+        Assert.Equal("build", plan.Arguments[0]);
+        Assert.DoesNotContain("buildx", plan.Arguments);
+    }
 }

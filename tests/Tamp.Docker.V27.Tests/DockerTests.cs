@@ -17,7 +17,7 @@ public sealed class DockerTests
     public void Every_Verb_Targets_The_docker_Executable()
     {
         Assert.Equal("docker", Docker.Logout().Executable);
-        Assert.Equal("docker", Docker.Build(s => s.SetContext(".")).Executable);
+        Assert.Equal("docker", Docker.LegacyBuild(s => s.SetContext(".")).Executable);
         Assert.Equal("docker", Docker.Tag(s => s.SetSource("a:b").SetTarget("a:c")).Executable);
         Assert.Equal("docker", Docker.Push(s => s.SetImage("a:b")).Executable);
         Assert.Equal("docker", Docker.Pull(s => s.SetImage("a:b")).Executable);
@@ -27,7 +27,7 @@ public sealed class DockerTests
     public void Verbs_Begin_With_Their_Verb_Token()
     {
         Assert.Equal("logout", Docker.Logout().Arguments[0]);
-        Assert.Equal("build", Docker.Build(s => s.SetContext(".")).Arguments[0]);
+        Assert.Equal("build", Docker.LegacyBuild(s => s.SetContext(".")).Arguments[0]);
         Assert.Equal("tag", Docker.Tag(s => s.SetSource("a").SetTarget("b")).Arguments[0]);
         Assert.Equal("push", Docker.Push(s => s.SetImage("img")).Arguments[0]);
         Assert.Equal("pull", Docker.Pull(s => s.SetImage("img")).Arguments[0]);
@@ -102,14 +102,14 @@ public sealed class DockerTests
     [Fact]
     public void Build_Defaults_Context_To_Current_Directory()
     {
-        var plan = Docker.Build(s => { });
+        var plan = Docker.LegacyBuild(s => { });
         Assert.Equal(".", plan.Arguments[^1]);
     }
 
     [Fact]
     public void Build_Tags_Emit_As_Repeated_Tag_Flags()
     {
-        var plan = Docker.Build(s => s
+        var plan = Docker.LegacyBuild(s => s
             .SetContext(".")
             .AddTag("myapp:latest")
             .AddTag("myapp:1.2.3"));
@@ -124,7 +124,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_Build_Args_Emit_As_KEY_EQ_VALUE()
     {
-        var plan = Docker.Build(s => s
+        var plan = Docker.LegacyBuild(s => s
             .SetContext(".")
             .SetBuildArg("VERSION", "1.0")
             .SetBuildArg("CONFIGURATION", "Release"));
@@ -135,7 +135,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_Labels_Emit_As_Label_Flag_Pairs()
     {
-        var plan = Docker.Build(s => s
+        var plan = Docker.LegacyBuild(s => s
             .SetContext(".")
             .SetLabel("org.opencontainers.image.source", "https://github.com/x"));
         Assert.Contains("--label", plan.Arguments);
@@ -145,7 +145,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_Context_Path_Comes_Last()
     {
-        var plan = Docker.Build(s => s
+        var plan = Docker.LegacyBuild(s => s
             .SetContext("./src")
             .SetDockerfile("Dockerfile.prod")
             .AddTag("x:y"));
@@ -155,7 +155,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_NoCache_Pull_Quiet_Are_Independent_Flags()
     {
-        var plan = Docker.Build(s => s.SetContext(".").SetNoCache(true).SetPull(true).SetQuiet(true));
+        var plan = Docker.LegacyBuild(s => s.SetContext(".").SetNoCache(true).SetPull(true).SetQuiet(true));
         Assert.Contains("--no-cache", plan.Arguments);
         Assert.Contains("--pull", plan.Arguments);
         Assert.Contains("--quiet", plan.Arguments);
@@ -164,7 +164,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_Platform_Round_Trips()
     {
-        var plan = Docker.Build(s => s.SetContext(".").SetPlatform("linux/amd64,linux/arm64"));
+        var plan = Docker.LegacyBuild(s => s.SetContext(".").SetPlatform("linux/amd64,linux/arm64"));
         var args = plan.Arguments;
         Assert.Equal("linux/amd64,linux/arm64", args[IndexOf(args, "--platform") + 1]);
     }
@@ -244,7 +244,7 @@ public sealed class DockerTests
     [Fact]
     public void Build_Throws_On_Null_Configurer()
     {
-        Assert.Throws<ArgumentNullException>(() => Docker.Build(null!));
+        Assert.Throws<ArgumentNullException>(() => Docker.LegacyBuild(null!));
     }
 
     [Fact]

@@ -1,6 +1,6 @@
 namespace Tamp.Docker.V27;
 
-public sealed class DockerBuildSettings : DockerSettingsBase
+public sealed class DockerLegacyBuildSettings : DockerSettingsBase
 {
     /// <summary>The build context path (positional). Defaults to current directory.</summary>
     public string? Context { get; set; }
@@ -17,20 +17,20 @@ public sealed class DockerBuildSettings : DockerSettingsBase
     public string? OutputType { get; set; }
     public string? Progress { get; set; }
 
-    public DockerBuildSettings SetContext(string? path) { Context = path; return this; }
-    public DockerBuildSettings SetDockerfile(string? path) { Dockerfile = path; return this; }
-    public DockerBuildSettings AddTag(string tag) { Tags.Add(tag); return this; }
-    public DockerBuildSettings SetBuildArg(string name, string value) { BuildArgs[name] = value; return this; }
-    public DockerBuildSettings SetLabel(string name, string value) { Labels[name] = value; return this; }
-    public DockerBuildSettings SetTarget(string? target) { Target = target; return this; }
-    public DockerBuildSettings SetPlatform(string? platform) { Platform = platform; return this; }
-    public DockerBuildSettings SetNoCache(bool v) { NoCache = v; return this; }
-    public DockerBuildSettings SetPull(bool v) { Pull = v; return this; }
-    public DockerBuildSettings SetQuiet(bool v) { Quiet = v; return this; }
-    public DockerBuildSettings SetNetwork(string? network) { Network = network; return this; }
-    public DockerBuildSettings SetOutputType(string? type) { OutputType = type; return this; }
-    public DockerBuildSettings SetProgress(string? progress) { Progress = progress; return this; }
-    public DockerBuildSettings SetWorkingDirectory(string? cwd) { WorkingDirectory = cwd; return this; }
+    public DockerLegacyBuildSettings SetContext(string? path) { Context = path; return this; }
+    public DockerLegacyBuildSettings SetDockerfile(string? path) { Dockerfile = path; return this; }
+    public DockerLegacyBuildSettings AddTag(string tag) { Tags.Add(tag); return this; }
+    public DockerLegacyBuildSettings SetBuildArg(string name, string value) { BuildArgs[name] = value; return this; }
+    public DockerLegacyBuildSettings SetLabel(string name, string value) { Labels[name] = value; return this; }
+    public DockerLegacyBuildSettings SetTarget(string? target) { Target = target; return this; }
+    public DockerLegacyBuildSettings SetPlatform(string? platform) { Platform = platform; return this; }
+    public DockerLegacyBuildSettings SetNoCache(bool v) { NoCache = v; return this; }
+    public DockerLegacyBuildSettings SetPull(bool v) { Pull = v; return this; }
+    public DockerLegacyBuildSettings SetQuiet(bool v) { Quiet = v; return this; }
+    public DockerLegacyBuildSettings SetNetwork(string? network) { Network = network; return this; }
+    public DockerLegacyBuildSettings SetOutputType(string? type) { OutputType = type; return this; }
+    public DockerLegacyBuildSettings SetProgress(string? progress) { Progress = progress; return this; }
+    public DockerLegacyBuildSettings SetWorkingDirectory(string? cwd) { WorkingDirectory = cwd; return this; }
 
     protected override IEnumerable<string> BuildVerbArguments()
     {

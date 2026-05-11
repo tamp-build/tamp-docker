@@ -22,10 +22,29 @@ public static class Docker
         return s.ToCommandPlan();
     }
 
-    public static CommandPlan Build(Action<DockerBuildSettings> configure)
+    /// <summary>
+    /// <c>docker buildx build</c> — the modern BuildKit-backed build entry point. Routes through
+    /// <see cref="Buildx.Build"/>. This is the canonical <c>Docker.Build</c> in 0.3.0+; the legacy
+    /// (pre-BuildKit) builder is available as <see cref="LegacyBuild"/>.
+    /// </summary>
+    /// <remarks>
+    /// Modern Dockerfiles using <c>RUN --mount=type=cache</c>, <c>RUN --mount=type=secret</c>,
+    /// <c># syntax=docker/dockerfile:1.x</c> frontends, or named build contexts REQUIRE BuildKit
+    /// and fail under the legacy builder with a Dockerfile-syntax error. In 2026, the legacy
+    /// builder is the exotic case — this default reflects that.
+    /// </remarks>
+    public static CommandPlan Build(Action<DockerBuildxBuildSettings> configure)
+        => Buildx.Build(configure);
+
+    /// <summary>
+    /// <c>docker build</c> — the legacy (pre-BuildKit) builder. Use when you know your Dockerfile
+    /// does NOT use BuildKit-only syntax and you specifically need the legacy build path. Modern
+    /// callers should use <see cref="Build"/> (which routes to BuildKit) instead.
+    /// </summary>
+    public static CommandPlan LegacyBuild(Action<DockerLegacyBuildSettings> configure)
     {
         if (configure is null) throw new ArgumentNullException(nameof(configure));
-        var s = new DockerBuildSettings();
+        var s = new DockerLegacyBuildSettings();
         configure(s);
         return s.ToCommandPlan();
     }
