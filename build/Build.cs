@@ -42,8 +42,15 @@ class Build : TampBuild
         .Description("Delete bin/obj and the artifacts directory.")
         .Executes(() =>
         {
+            // Exclude the build script's own bin/obj — we're currently running from there.
+            // Deleting them mid-run would self-evict Tamp.NetCli.V10 the Restore target needs.
+            // The Tamp.Core 1.0.8 GlobDirectories fix (TAM-113) surfaced this trap.
+            var buildDir = (RootDirectory / "build").Value;
             foreach (var d in RootDirectory.GlobDirectories("**/bin", "**/obj"))
+            {
+                if (d.Value.StartsWith(buildDir, StringComparison.Ordinal)) continue;
                 d.Delete();
+            }
             Artifacts.Delete();
         });
 
