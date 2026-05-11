@@ -53,4 +53,104 @@ public static class Docker
         configure(s);
         return s.ToCommandPlan();
     }
+
+    /// <summary>
+    /// Sub-facade for <c>docker compose &lt;verb&gt;</c>. Sits under the
+    /// same Docker namespace so callers see <c>Docker.Compose.Up(...)</c>
+    /// without a separate import.
+    /// </summary>
+    public static class Compose
+    {
+        public static CommandPlan Up(Action<DockerComposeUpSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Down(Action<DockerComposeDownSettings>? configure = null) => Make(configure);
+        public static CommandPlan BuildImages(Action<DockerComposeBuildSettings>? configure = null) => Make(configure);
+        public static CommandPlan Logs(Action<DockerComposeLogsSettings>? configure = null) => Make(configure);
+        public static CommandPlan Ps(Action<DockerComposePsSettings>? configure = null) => Make(configure);
+        public static CommandPlan Pull(Action<DockerComposePullSettings>? configure = null) => Make(configure);
+        public static CommandPlan Push(Action<DockerComposePushSettings>? configure = null) => Make(configure);
+
+        public static CommandPlan Exec(Action<DockerComposeExecSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Run(Action<DockerComposeRunSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Config(Action<DockerComposeConfigSettings>? configure = null) => Make(configure);
+
+        public static CommandPlan Start(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("start", configure);
+        public static CommandPlan Stop(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("stop", configure);
+        public static CommandPlan Restart(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("restart", configure);
+        public static CommandPlan Kill(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("kill", configure);
+        public static CommandPlan Pause(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("pause", configure);
+        public static CommandPlan Unpause(Action<DockerComposeLifecycleSettings>? configure = null) => Lifecycle("unpause", configure);
+
+        private static CommandPlan Lifecycle(string subverb, Action<DockerComposeLifecycleSettings>? configure)
+        {
+            var s = new DockerComposeLifecycleSettings();
+            s.SetSubverb(subverb);
+            configure?.Invoke(s);
+            return s.ToCommandPlan();
+        }
+
+        private static CommandPlan Make<T>(Action<T>? configure) where T : DockerComposeBaseSettings, new()
+        {
+            var s = new T();
+            configure?.Invoke(s);
+            return s.ToCommandPlan();
+        }
+    }
+
+    /// <summary>
+    /// Sub-facade for <c>docker buildx &lt;verb&gt;</c>. Multi-platform
+    /// build orchestration that lives alongside the base CLI but with a
+    /// different shape (named builders, cache backends, bake files).
+    /// </summary>
+    public static class Buildx
+    {
+        public static CommandPlan Build(Action<DockerBuildxBuildSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Bake(Action<DockerBuildxBakeSettings>? configure = null) => Make(configure);
+        public static CommandPlan Create(Action<DockerBuildxCreateSettings>? configure = null) => Make(configure);
+        public static CommandPlan Ls(Action<DockerBuildxLsSettings>? configure = null) => Make(configure);
+
+        public static CommandPlan Use(Action<DockerBuildxUseSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Inspect(Action<DockerBuildxInspectSettings>? configure = null) => Make(configure);
+        public static CommandPlan Prune(Action<DockerBuildxPruneSettings>? configure = null) => Make(configure);
+
+        public static CommandPlan Rm(Action<DockerBuildxRmSettings> configure)
+        {
+            if (configure is null) throw new ArgumentNullException(nameof(configure));
+            return Make(configure);
+        }
+
+        public static CommandPlan Stop(Action<DockerBuildxStopSettings>? configure = null) => Make(configure);
+        public static CommandPlan Version(Action<DockerBuildxVersionSettings>? configure = null) => Make(configure);
+
+        private static CommandPlan Make<T>(Action<T>? configure) where T : DockerBuildxBaseSettings, new()
+        {
+            var s = new T();
+            configure?.Invoke(s);
+            return s.ToCommandPlan();
+        }
+    }
 }
