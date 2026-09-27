@@ -3,6 +3,13 @@
 All notable changes to **Tamp.Docker** are recorded here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) with semver pinning.
 
+## [Unreleased]
+
+### Added
+
+- Package now ships XML documentation files (`.xml`) alongside the assembly, so consumers get IntelliSense and API docs. (Mirrors [tamp-build/tamp#3](https://github.com/tamp-build/tamp/pull/50).)
+
+
 ## 0.3.1
 
 - Object-init overloads on every Docker wrapper (TAM-161 satellite fanout).
