@@ -24,8 +24,8 @@ public static class Docker
 
     /// <summary>
     /// <c>docker buildx build</c> — the modern BuildKit-backed build entry point. Routes through
-    /// <see cref="Buildx.Build"/>. This is the canonical <c>Docker.Build</c> in 0.3.0+; the legacy
-    /// (pre-BuildKit) builder is available as <see cref="LegacyBuild"/>.
+    /// <c>Buildx.Build</c>. This is the canonical <c>Docker.Build</c> in 0.3.0+; the legacy
+    /// (pre-BuildKit) builder is available as <c>LegacyBuild</c>.
     /// </summary>
     /// <remarks>
     /// Modern Dockerfiles using <c>RUN --mount=type=cache</c>, <c>RUN --mount=type=secret</c>,
@@ -39,7 +39,7 @@ public static class Docker
     /// <summary>
     /// <c>docker build</c> — the legacy (pre-BuildKit) builder. Use when you know your Dockerfile
     /// does NOT use BuildKit-only syntax and you specifically need the legacy build path. Modern
-    /// callers should use <see cref="Build"/> (which routes to BuildKit) instead.
+    /// callers should use <c>Build</c> (which routes to BuildKit) instead.
     /// </summary>
     public static CommandPlan LegacyBuild(Action<DockerLegacyBuildSettings> configure)
     {
