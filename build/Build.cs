@@ -1,12 +1,14 @@
 using Tamp;
 using Tamp.NetCli.V10;
 using Tamp.Telegram;
+using Tamp.Components;
+using Tamp.Components.NetCli.V10;
 
 /// <summary>
 /// tamp-docker's self-hosted build script. Drives the
 /// restore / build / test / pack / push pipeline through Tamp itself.
 /// </summary>
-class Build : TampBuild
+class Build : TampBuild, IDotNetTest, IDotNetPack
 {
     public static int Main(string[] args) => Execute<Build>(args);
 
@@ -17,14 +19,10 @@ class Build : TampBuild
         TelegramBuildReporter.FromEnvironment();
 
     [Parameter("Build configuration")]
-    Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    public Configuration Configuration { get; set; } = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
-    [Parameter("Package version override (resolved from CI tag, e.g. v0.1.0 → 0.1.0)", EnvironmentVariable = "PACKAGE_VERSION")]
-#pragma warning disable CS0649 // Set by reflection via [Parameter] binding.
-    readonly string? Version;
-#pragma warning restore CS0649
 
-    [Solution] readonly Solution Solution = null!;
+    [Solution] public Solution Solution { get; set; } = null!;
     [GitRepository] readonly GitRepository Git = null!;
     // Bound by SecretBinder from NUGET_API_KEY env var (TAM-78,
     // Tamp.Core 1.0.1). CI masking via TampBuild.RegisterSecretForCiMasking.
@@ -32,6 +30,8 @@ class Build : TampBuild
     readonly Secret NuGetApiKey = null!;
 
     AbsolutePath Artifacts => RootDirectory / "artifacts";
+
+    public AbsolutePath ArtifactsDirectory => Artifacts;
 
     Target Info => _ => _
         .Description("Print build context — useful at the top of CI logs.")
@@ -48,42 +48,8 @@ class Build : TampBuild
         .Description("Delete bin/obj and the artifacts directory.")
         .Executes(() => CleanArtifacts());
 
-    Target Restore => _ => _
-        .Executes(() => DotNet.Restore(s => s.SetProject(Solution.Path)));
-
-    Target Compile => _ => _
-        .DependsOn(nameof(Restore))
-        .Executes(() => DotNet.Build(s => s
-            .SetProject(Solution.Path)
-            .SetConfiguration(Configuration)
-            .SetNoRestore(true)));
-
-    Target Test => _ => _
-        .DependsOn(nameof(Compile))
-        .Description("Run the unit test suite.")
-        .Executes(() => DotNet.Test(s => s
-            .SetProject(RootDirectory / "tests" / "Tamp.Docker.V27.Tests" / "Tamp.Docker.V27.Tests.csproj")
-            .SetConfiguration(Configuration)
-            .SetNoBuild(true)
-            .AddLogger("trx;LogFileName=test-results.trx")
-            .AddDataCollector("XPlat Code Coverage")
-            .SetSettings((RootDirectory / "build" / "coverlet.runsettings").Value)
-            .SetResultsDirectory(Artifacts / "test-results")));
-
-    Target Pack => _ => _
-        .DependsOn(nameof(Test))
-        .Description("Pack Tamp.Docker.V27 into ./artifacts.")
-        .Executes(() => DotNet.Pack(s =>
-        {
-            s.SetProject(RootDirectory / "src" / "Tamp.Docker.V27" / "Tamp.Docker.V27.csproj");
-            s.SetConfiguration(Configuration);
-            s.SetNoBuild(true);
-            s.SetOutput(Artifacts);
-            if (!string.IsNullOrEmpty(Version)) s.SetProperty("Version", Version);
-        }));
-
     Target Push => _ => _
-        .DependsOn(nameof(Pack))
+        .DependsOn(nameof(IPack.Pack))
         .Description("Push every nupkg to nuget.org. Tag-driven CI.")
         .Requires(() => NuGetApiKey != null)
         .Executes(() => Artifacts.GlobFiles("*.nupkg")
@@ -94,11 +60,11 @@ class Build : TampBuild
                 .SetSkipDuplicate(true))));
 
     Target Ci => _ => _
-        .DependsOn(nameof(Info), nameof(Clean), nameof(Pack))
+        .DependsOn(nameof(Info), nameof(Clean), nameof(ITest.Test), nameof(IPack.Pack))
         .Description("Full CI pipeline: print info, clean, restore, build, test, pack.");
 
     Target Default => _ => _
-        .DependsOn(nameof(Compile))
+        .DependsOn(nameof(ICompile.Compile))
         .Description("Local-developer default: restore + build the solution.");
 
     // ----- Sonar (TAM-17) -----
@@ -120,7 +86,7 @@ class Build : TampBuild
 
     Target SonarBegin => _ => _
         .Description("Initialize the SonarScanner pre-build phase.")
-        .Before(nameof(Compile))
+        .Before(nameof(ICompile.Compile))
         .Requires(() => SonarToken != null)
         .Executes(() => Tamp.SonarScanner.V10.SonarScanner.Begin(SonarTool, s =>
         {
@@ -137,7 +103,7 @@ class Build : TampBuild
 
     Target SonarEnd => _ => _
         .Description("Finalize SonarScanner and submit results to the server.")
-        .DependsOn(nameof(Test))
+        .DependsOn(nameof(ITest.Test))
         .Requires(() => SonarToken != null)
         .Executes(() => Tamp.SonarScanner.V10.SonarScanner.End(SonarTool, s => s.SetToken(SonarToken)));
 
